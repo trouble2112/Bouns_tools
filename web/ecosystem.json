@@ -1,0 +1,17 @@
+{
+  "name": "bonus-calculator",
+  "script": "server.py",
+  "interpreter": "python",
+  "cwd": "C:/Users/EDWD/PG2/bonus_calculator/web",
+  "instances": 1,
+  "autorestart": true,
+  "watch": false,
+  "max_memory_restart": "200M",
+  "env": {
+    "NODE_ENV": "production"
+  },
+  "log_file": "logs/app.log",
+  "error_file": "logs/error.log",
+  "out_file": "logs/out.log",
+  "time": true
+}

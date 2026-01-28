@@ -1,0 +1,922 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>2026上半年奖金计算器 (SQLite版)</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        :root {
+            --primary: #1976D2;
+            --primary-dark: #1565C0;
+            --success: #4CAF50;
+            --warning: #FF9800;
+            --danger: #f44336;
+            --bg: #f5f5f5;
+            --card-bg: #ffffff;
+            --text: #333333;
+            --text-secondary: #666666;
+            --border: #e0e0e0;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.5;
+            padding-bottom: 80px;
+        }
+        
+        /* 顶部导航 */
+        .header {
+            background: var(--primary);
+            color: white;
+            padding: 16px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .header h1 {
+            font-size: 18px;
+            font-weight: 600;
+        }
+        
+        .header .subtitle {
+            font-size: 12px;
+            opacity: 0.9;
+            margin-top: 4px;
+        }
+        
+        /* 状态指示器 */
+        .status-indicator {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #4CAF50;
+        }
+        
+        .status-dot.offline {
+            background: #f44336;
+        }
+        
+        .status-text {
+            font-size: 12px;
+            opacity: 0.9;
+        }
+        
+        /* 标签页导航 */
+        .tabs {
+            display: flex;
+            background: white;
+            border-bottom: 1px solid var(--border);
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+        
+        .tab {
+            flex: 1;
+            min-width: 80px;
+            padding: 12px 8px;
+            text-align: center;
+            font-size: 14px;
+            color: var(--text-secondary);
+            border: none;
+            background: none;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            white-space: nowrap;
+        }
+        
+        .tab.active {
+            color: var(--primary);
+            border-bottom-color: var(--primary);
+            font-weight: 600;
+        }
+        
+        /* 其他样式保持不变... */
+        
+        /* 内容区 */
+        .content {
+            padding: 16px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .panel {
+            display: none;
+        }
+        
+        .panel.active {
+            display: block;
+        }
+        
+        /* 卡片 */
+        .card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 16px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        
+        .card-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 12px;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        /* 表单 */
+        .form-group {
+            margin-bottom: 12px;
+        }
+        
+        .form-label {
+            display: block;
+            font-size: 13px;
+            color: var(--text-secondary);
+            margin-bottom: 4px;
+        }
+        
+        .form-control {
+            width: 100%;
+            padding: 10px 6px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 15px;
+            transition: border-color 0.2s;
+            min-width: 0;
+        }
+        
+        /* 数字输入框专用 */
+        input[type="number"].form-control {
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 14px;
+            letter-spacing: -0.5px;
+        }
+        
+        .form-control:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+        
+        .form-row {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+        }
+        
+        .form-row-3 {
+            grid-template-columns: repeat(2, 1fr);
+        }
+        
+        @media (min-width: 600px) {
+            .form-row-3 {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+        
+        @media (min-width: 900px) {
+            .form-row {
+                grid-template-columns: repeat(4, 1fr);
+            }
+            .form-row-3 {
+                grid-template-columns: repeat(6, 1fr);
+            }
+        }
+        
+        /* 按钮 */
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: var(--primary-dark);
+        }
+        
+        .btn-success {
+            background: var(--success);
+            color: white;
+        }
+        
+        .btn-danger {
+            background: var(--danger);
+            color: white;
+        }
+        
+        .btn-outline {
+            background: white;
+            border: 1px solid var(--border);
+            color: var(--text);
+        }
+        
+        .btn-sm {
+            padding: 8px 16px;
+            font-size: 14px;
+        }
+        
+        .btn-block {
+            width: 100%;
+        }
+        
+        /* 人员列表 */
+        .person-item {
+            background: white;
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        
+        .person-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid var(--border);
+        }
+        
+        .person-name {
+            font-size: 18px;
+            font-weight: 600;
+        }
+        
+        .person-role {
+            font-size: 12px;
+            padding: 4px 8px;
+            border-radius: 4px;
+            background: var(--primary);
+            color: white;
+        }
+        
+        .person-bonus {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--success);
+        }
+        
+        .bonus-detail {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+            font-size: 13px;
+        }
+        
+        @media (min-width: 768px) {
+            .bonus-detail {
+                grid-template-columns: repeat(4, 1fr);
+            }
+        }
+        
+        .bonus-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 6px 0;
+            border-bottom: 1px dashed var(--border);
+        }
+        
+        .bonus-item-label {
+            color: var(--text-secondary);
+        }
+        
+        .bonus-item-value {
+            font-weight: 600;
+        }
+        
+        /* 汇总卡片 */
+        .summary-card {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 16px;
+        }
+        
+        .summary-total {
+            font-size: 32px;
+            font-weight: 700;
+            margin: 8px 0;
+        }
+        
+        .summary-label {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+        
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            margin-top: 16px;
+        }
+        
+        @media (min-width: 768px) {
+            .summary-grid {
+                grid-template-columns: repeat(4, 1fr);
+            }
+        }
+        
+        .summary-item {
+            background: rgba(255,255,255,0.15);
+            border-radius: 8px;
+            padding: 12px;
+            text-align: center;
+        }
+        
+        .summary-item-value {
+            font-size: 20px;
+            font-weight: 600;
+        }
+        
+        .summary-item-label {
+            font-size: 12px;
+            opacity: 0.9;
+        }
+        
+        /* 参数项 */
+        .param-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid var(--border);
+        }
+        
+        .param-item:last-child {
+            border-bottom: none;
+        }
+        
+        .param-label {
+            font-size: 14px;
+        }
+        
+        .param-input {
+            width: 100px;
+            padding: 8px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            text-align: right;
+            font-size: 14px;
+        }
+        
+        .param-select {
+            padding: 8px 12px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            font-size: 14px;
+            background: white;
+            min-width: 120px;
+        }
+        
+        .form-control-select {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 16px;
+            background: white;
+        }
+        
+        /* 底部操作栏 */
+        .bottom-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: white;
+            padding: 12px 16px;
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+            display: flex;
+            gap: 12px;
+        }
+        
+        /* 空状态 */
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--text-secondary);
+        }
+        
+        .empty-state-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+        }
+        
+        /* 提示标签 */
+        .tag {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            margin-left: 8px;
+        }
+        
+        .tag-warning {
+            background: #FFF3E0;
+            color: #E65100;
+        }
+        
+        .tag-success {
+            background: #E8F5E8;
+            color: #2E7D32;
+        }
+        
+        /* 模态框 */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 200;
+            align-items: center;
+            justify-content: center;
+            padding: 16px;
+        }
+        
+        .modal.active {
+            display: flex;
+        }
+        
+        .modal-content {
+            background: white;
+            border-radius: 16px;
+            width: 100%;
+            max-width: 600px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        
+        .modal-header {
+            padding: 16px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .modal-title {
+            font-size: 18px;
+            font-weight: 600;
+        }
+        
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: var(--text-secondary);
+        }
+        
+        .modal-body {
+            padding: 16px;
+        }
+        
+        .modal-footer {
+            padding: 16px;
+            border-top: 1px solid var(--border);
+            display: flex;
+            gap: 12px;
+        }
+        
+        /* 开关 */
+        .switch-group {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .switch-btn {
+            flex: 1;
+            padding: 8px;
+            border: 1px solid var(--border);
+            background: white;
+            cursor: pointer;
+            font-size: 13px;
+        }
+        
+        .switch-btn:first-child {
+            border-radius: 6px 0 0 6px;
+        }
+        
+        .switch-btn:last-child {
+            border-radius: 0 6px 6px 0;
+        }
+        
+        .switch-btn.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+        
+        /* 分割线 */
+        .divider {
+            height: 1px;
+            background: var(--border);
+            margin: 16px 0;
+        }
+        
+        /* 删除按钮 */
+        .delete-btn {
+            background: none;
+            border: none;
+            color: var(--danger);
+            cursor: pointer;
+            padding: 4px 8px;
+            font-size: 14px;
+        }
+        
+        /* 加载动画 */
+        .loading {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid #f3f3f3;
+            border-top: 2px solid var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        /* 通知 */
+        .toast {
+            position: fixed;
+            top: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--success);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 8px;
+            z-index: 300;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        
+        .toast.show {
+            opacity: 1;
+        }
+        
+        .toast.error {
+            background: var(--danger);
+        }
+    </style>
+</head>
+<body>
+    <!-- 通知 -->
+    <div class="toast" id="toast"></div>
+    
+    <!-- 顶部 -->
+    <header class="header">
+        <h1>💰 2026上半年奖金计算器</h1>
+        <div class="subtitle">SQLite版本 · 云端存储 · 数据持久化</div>
+        <div class="status-indicator">
+            <div class="status-dot" id="status-dot"></div>
+            <div class="status-text" id="status-text">连接中...</div>
+        </div>
+    </header>
+    
+    <!-- 标签页 -->
+    <nav class="tabs">
+        <button class="tab active" data-tab="summary">📊 汇总</button>
+        <button class="tab" data-tab="persons">👥 人员</button>
+        <button class="tab" data-tab="params">⚙️ 参数</button>
+    </nav>
+    
+    <!-- 内容区 -->
+    <main class="content">
+        <!-- 汇总面板 -->
+        <div id="panel-summary" class="panel active">
+            <div class="summary-card">
+                <div class="summary-label">奖金总额</div>
+                <div class="summary-total" id="total-bonus">¥0</div>
+                <div class="summary-label">共 <span id="total-count">0</span> 人</div>
+                <div class="summary-grid">
+                    <div class="summary-item">
+                        <div class="summary-item-value" id="sum-incentive">¥0</div>
+                        <div class="summary-item-label">过程激励</div>
+                    </div>
+                    <div class="summary-item">
+                        <div class="summary-item-value" id="sum-completion">¥0</div>
+                        <div class="summary-item-label">完成奖</div>
+                    </div>
+                    <div class="summary-item">
+                        <div class="summary-item-value" id="sum-region">¥0</div>
+                        <div class="summary-item-label">区域/全国奖</div>
+                    </div>
+                    <div class="summary-item">
+                        <div class="summary-item-value" id="sum-other">¥0</div>
+                        <div class="summary-item-label">补贴+CEO奖</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-title">📈 按岗位汇总</div>
+                <div id="role-summary"></div>
+            </div>
+            
+            <div class="card">
+                <div class="card-title">📋 明细列表</div>
+                <div id="result-list"></div>
+            </div>
+        </div>
+        
+        <!-- 人员面板 -->
+        <div id="panel-persons" class="panel">
+            <div id="person-list"></div>
+            <div class="empty-state" id="empty-persons">
+                <div class="empty-state-icon">👤</div>
+                <p>暂无人员数据</p>
+                <p style="margin-top:8px;font-size:13px">点击下方按钮添加人员</p>
+            </div>
+        </div>
+        
+        <!-- 参数面板 -->
+        <div id="panel-params" class="panel">
+            <div class="card">
+                <div class="card-title">💾 数据存储 <span class="tag tag-success">云端同步</span></div>
+                <p style="margin-bottom:12px;font-size:13px;color:var(--text-secondary)">
+                    数据已保存到服务器SQLite数据库，支持跨设备访问
+                </p>
+                <button class="btn btn-outline btn-block" onclick="migrateFromLocalStorage()" style="margin-bottom:12px">
+                    📥 导入浏览器本地数据
+                </button>
+                <button class="btn btn-outline btn-block" onclick="loadTestData()" style="margin-bottom:12px">
+                    📋 加载测试数据
+                </button>
+                <button class="btn btn-danger btn-block" onclick="clearAllData()">
+                    🗑️ 清空所有数据
+                </button>
+            </div>
+            
+            <div class="card">
+                <div class="card-title">⏱️ 时间系数</div>
+                <div class="param-item">
+                    <span class="param-label">1月</span>
+                    <input type="number" class="param-input" id="coeff-1" value="1.15" step="0.05" min="0" max="2">
+                </div>
+                <div class="param-item">
+                    <span class="param-label">2月</span>
+                    <input type="number" class="param-input" id="coeff-2" value="1.15" step="0.05" min="0" max="2">
+                </div>
+                <div class="param-item">
+                    <span class="param-label">3月</span>
+                    <input type="number" class="param-input" id="coeff-3" value="1.10" step="0.05" min="0" max="2">
+                </div>
+                <div class="param-item">
+                    <span class="param-label">4月</span>
+                    <input type="number" class="param-input" id="coeff-4" value="1.00" step="0.05" min="0" max="2">
+                </div>
+                <div class="param-item">
+                    <span class="param-label">5月</span>
+                    <input type="number" class="param-input" id="coeff-5" value="0.90" step="0.05" min="0" max="2">
+                </div>
+                <div class="param-item">
+                    <span class="param-label">6月</span>
+                    <input type="number" class="param-input" id="coeff-6" value="0.85" step="0.05" min="0" max="2">
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-title">🎯 回款门槛</div>
+                <div class="param-item">
+                    <span class="param-label">90%奖回款门槛</span>
+                    <input type="number" class="param-input" id="threshold-90" value="0.85" step="0.01" min="0" max="1">
+                </div>
+                <div class="param-item">
+                    <span class="param-label">100%奖回款门槛</span>
+                    <input type="number" class="param-input" id="threshold-100" value="0.90" step="0.01" min="0" max="1">
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-title">🔄 完成奖叠加模式 <span class="tag tag-warning">待确认</span></div>
+                <div class="param-item">
+                    <span class="param-label">总经理DM</span>
+                    <div class="switch-group">
+                        <button class="switch-btn active" data-param="dm-mode" data-value="exclusive">仅最高档</button>
+                        <button class="switch-btn" data-param="dm-mode" data-value="stack">叠加</button>
+                    </div>
+                </div>
+                <div class="param-item">
+                    <span class="param-label">其他岗位</span>
+                    <div class="switch-group">
+                        <button class="switch-btn" data-param="other-mode" data-value="exclusive">仅最高档</button>
+                        <button class="switch-btn active" data-param="other-mode" data-value="stack">叠加</button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-title">💵 固定补贴</div>
+                <div class="param-item">
+                    <span class="param-label">常委半年补贴</span>
+                    <input type="number" class="param-input" id="cp-subsidy" value="60000" step="1000">
+                </div>
+                <div class="param-item">
+                    <span class="param-label">销售月补贴(新购/高校)</span>
+                    <input type="number" class="param-input" id="sales-subsidy" value="800" step="100">
+                </div>
+            </div>
+        </div>
+    </main>
+    
+    <!-- 底部操作栏 -->
+    <div class="bottom-bar">
+        <button class="btn btn-primary" style="flex:1" onclick="showAddModal()">
+            ➕ 添加人员
+        </button>
+    </div>
+    
+    <!-- 添加/编辑人员模态框 -->
+    <div class="modal" id="person-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title" id="modal-title">添加人员</div>
+                <button class="modal-close" onclick="closeModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="edit-id">
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">姓名 *</label>
+                        <input type="text" class="form-control" id="input-name" placeholder="请输入姓名">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">岗位 *</label>
+                        <select class="form-control" id="input-role">
+                            <option value="CP">常委 CP</option>
+                            <option value="DM">总经理 DM</option>
+                            <option value="VP">副总经理 VP</option>
+                            <option value="MGR">部门经理 MGR</option>
+                            <option value="SALES_USER">销售-用户部</option>
+                            <option value="SALES_NEW">销售-新购</option>
+                            <option value="SALES_EDU">销售-高校</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">区域</label>
+                        <select class="form-control" id="input-region">
+                            <option value="全国">全国</option>
+                            <option value="华北">华北</option>
+                            <option value="华东">华东</option>
+                            <option value="华南">华南</option>
+                            <option value="西南">西南</option>
+                            <option value="西北">西北</option>
+                            <option value="东北">东北</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">组织单元</label>
+                        <input type="text" class="form-control" id="input-org" placeholder="如：北京分公司">
+                    </div>
+                </div>
+                
+                <div class="divider"></div>
+                <h4 style="margin-bottom:12px;font-size:14px;color:var(--text-secondary)">📊 月度产值（元）</h4>
+                
+                <div class="form-row form-row-3">
+                    <div class="form-group">
+                        <label class="form-label">1月</label>
+                        <input type="number" class="form-control" id="input-rev-1" value="0">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">2月</label>
+                        <input type="number" class="form-control" id="input-rev-2" value="0">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">3月</label>
+                        <input type="number" class="form-control" id="input-rev-3" value="0">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">4月</label>
+                        <input type="number" class="form-control" id="input-rev-4" value="0">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">5月</label>
+                        <input type="number" class="form-control" id="input-rev-5" value="0">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">6月</label>
+                        <input type="number" class="form-control" id="input-rev-6" value="0">
+                    </div>
+                </div>
+                
+                <div class="divider"></div>
+                <h4 style="margin-bottom:12px;font-size:14px;color:var(--text-secondary)">🎯 目标与回款</h4>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">分公司总产值</label>
+                        <input type="number" class="form-control" id="input-company-rev" value="0">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">年度目标</label>
+                        <input type="number" class="form-control" id="input-target" value="0">
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">回款率 (0-1)</label>
+                        <input type="number" class="form-control" id="input-collection" value="0.90" step="0.01" min="0" max="1">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">个人分配比例 (0-1)</label>
+                        <input type="number" class="form-control" id="input-ratio" placeholder="不填则显示总额" step="0.01" min="0" max="1">
+                    </div>
+                </div>
+                
+                <div class="divider"></div>
+                <h4 style="margin-bottom:12px;font-size:14px;color:var(--text-secondary)">🏆 完成情况</h4>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">区域完成90%</label>
+                        <select class="form-control" id="input-region-90" style="width:100%">
+                            <option value="0">否</option>
+                            <option value="1">是</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">区域完成100%</label>
+                        <select class="form-control" id="input-region-100" style="width:100%">
+                            <option value="0">否</option>
+                            <option value="1">是</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">全国完成90%</label>
+                        <select class="form-control" id="input-national-90" style="width:100%">
+                            <option value="0">否</option>
+                            <option value="1">是</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">全国完成100%</label>
+                        <select class="form-control" id="input-national-100" style="width:100%">
+                            <option value="0">否</option>
+                            <option value="1">是</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">CEO奖金</label>
+                    <input type="number" class="form-control" id="input-ceo-bonus" value="0">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" style="flex:1" onclick="closeModal()">取消</button>
+                <button class="btn btn-primary" style="flex:1" onclick="savePerson()">保存</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="app_sqlite.js"></script>
+</body>
+</html>

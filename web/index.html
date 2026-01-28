@@ -131,11 +131,12 @@
         
         .form-control {
             width: 100%;
-            padding: 10px 12px;
+            padding: 10px 8px;
             border: 1px solid var(--border);
             border-radius: 8px;
-            font-size: 16px;
+            font-size: 15px;
             transition: border-color 0.2s;
+            min-width: 0;
         }
         
         .form-control:focus {
@@ -150,7 +151,13 @@
         }
         
         .form-row-3 {
-            grid-template-columns: repeat(3, 1fr);
+            grid-template-columns: repeat(2, 1fr);
+        }
+        
+        @media (min-width: 480px) {
+            .form-row-3 {
+                grid-template-columns: repeat(3, 1fr);
+            }
         }
         
         @media (min-width: 768px) {

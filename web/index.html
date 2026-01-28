@@ -1,0 +1,1345 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>2026上半年奖金计算器</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        :root {
+            --primary: #1976D2;
+            --primary-dark: #1565C0;
+            --success: #4CAF50;
+            --warning: #FF9800;
+            --danger: #f44336;
+            --bg: #f5f5f5;
+            --card-bg: #ffffff;
+            --text: #333333;
+            --text-secondary: #666666;
+            --border: #e0e0e0;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.5;
+            padding-bottom: 80px;
+        }
+        
+        /* 顶部导航 */
+        .header {
+            background: var(--primary);
+            color: white;
+            padding: 16px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .header h1 {
+            font-size: 18px;
+            font-weight: 600;
+        }
+        
+        .header .subtitle {
+            font-size: 12px;
+            opacity: 0.9;
+            margin-top: 4px;
+        }
+        
+        /* 标签页导航 */
+        .tabs {
+            display: flex;
+            background: white;
+            border-bottom: 1px solid var(--border);
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+        
+        .tab {
+            flex: 1;
+            min-width: 80px;
+            padding: 12px 8px;
+            text-align: center;
+            font-size: 14px;
+            color: var(--text-secondary);
+            border: none;
+            background: none;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            white-space: nowrap;
+        }
+        
+        .tab.active {
+            color: var(--primary);
+            border-bottom-color: var(--primary);
+            font-weight: 600;
+        }
+        
+        /* 内容区 */
+        .content {
+            padding: 16px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .panel {
+            display: none;
+        }
+        
+        .panel.active {
+            display: block;
+        }
+        
+        /* 卡片 */
+        .card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 16px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        
+        .card-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 12px;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        /* 表单 */
+        .form-group {
+            margin-bottom: 12px;
+        }
+        
+        .form-label {
+            display: block;
+            font-size: 13px;
+            color: var(--text-secondary);
+            margin-bottom: 4px;
+        }
+        
+        .form-control {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.2s;
+        }
+        
+        .form-control:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+        
+        .form-row {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+        }
+        
+        .form-row-3 {
+            grid-template-columns: repeat(3, 1fr);
+        }
+        
+        @media (min-width: 768px) {
+            .form-row {
+                grid-template-columns: repeat(4, 1fr);
+            }
+            .form-row-3 {
+                grid-template-columns: repeat(6, 1fr);
+            }
+        }
+        
+        /* 按钮 */
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: var(--primary-dark);
+        }
+        
+        .btn-success {
+            background: var(--success);
+            color: white;
+        }
+        
+        .btn-danger {
+            background: var(--danger);
+            color: white;
+        }
+        
+        .btn-outline {
+            background: white;
+            border: 1px solid var(--border);
+            color: var(--text);
+        }
+        
+        .btn-sm {
+            padding: 8px 16px;
+            font-size: 14px;
+        }
+        
+        .btn-block {
+            width: 100%;
+        }
+        
+        /* 人员列表 */
+        .person-item {
+            background: white;
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        
+        .person-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid var(--border);
+        }
+        
+        .person-name {
+            font-size: 18px;
+            font-weight: 600;
+        }
+        
+        .person-role {
+            font-size: 12px;
+            padding: 4px 8px;
+            border-radius: 4px;
+            background: var(--primary);
+            color: white;
+        }
+        
+        .person-bonus {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--success);
+        }
+        
+        .bonus-detail {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+            font-size: 13px;
+        }
+        
+        @media (min-width: 768px) {
+            .bonus-detail {
+                grid-template-columns: repeat(4, 1fr);
+            }
+        }
+        
+        .bonus-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 6px 0;
+            border-bottom: 1px dashed var(--border);
+        }
+        
+        .bonus-item-label {
+            color: var(--text-secondary);
+        }
+        
+        .bonus-item-value {
+            font-weight: 600;
+        }
+        
+        /* 汇总卡片 */
+        .summary-card {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 16px;
+        }
+        
+        .summary-total {
+            font-size: 32px;
+            font-weight: 700;
+            margin: 8px 0;
+        }
+        
+        .summary-label {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+        
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            margin-top: 16px;
+        }
+        
+        @media (min-width: 768px) {
+            .summary-grid {
+                grid-template-columns: repeat(4, 1fr);
+            }
+        }
+        
+        .summary-item {
+            background: rgba(255,255,255,0.15);
+            border-radius: 8px;
+            padding: 12px;
+            text-align: center;
+        }
+        
+        .summary-item-value {
+            font-size: 20px;
+            font-weight: 600;
+        }
+        
+        .summary-item-label {
+            font-size: 12px;
+            opacity: 0.9;
+        }
+        
+        /* 参数项 */
+        .param-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid var(--border);
+        }
+        
+        .param-item:last-child {
+            border-bottom: none;
+        }
+        
+        .param-label {
+            font-size: 14px;
+        }
+        
+        .param-input {
+            width: 100px;
+            padding: 8px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            text-align: right;
+            font-size: 14px;
+        }
+        
+        .param-select {
+            padding: 8px 12px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            font-size: 14px;
+            background: white;
+            min-width: 120px;
+        }
+        
+        .form-control-select {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 16px;
+            background: white;
+        }
+        
+        /* 底部操作栏 */
+        .bottom-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: white;
+            padding: 12px 16px;
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+            display: flex;
+            gap: 12px;
+        }
+        
+        /* 空状态 */
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--text-secondary);
+        }
+        
+        .empty-state-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+        }
+        
+        /* 提示标签 */
+        .tag {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            margin-left: 8px;
+        }
+        
+        .tag-warning {
+            background: #FFF3E0;
+            color: #E65100;
+        }
+        
+        /* 模态框 */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 200;
+            align-items: center;
+            justify-content: center;
+            padding: 16px;
+        }
+        
+        .modal.active {
+            display: flex;
+        }
+        
+        .modal-content {
+            background: white;
+            border-radius: 16px;
+            width: 100%;
+            max-width: 500px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        
+        .modal-header {
+            padding: 16px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .modal-title {
+            font-size: 18px;
+            font-weight: 600;
+        }
+        
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: var(--text-secondary);
+        }
+        
+        .modal-body {
+            padding: 16px;
+        }
+        
+        .modal-footer {
+            padding: 16px;
+            border-top: 1px solid var(--border);
+            display: flex;
+            gap: 12px;
+        }
+        
+        /* 开关 */
+        .switch-group {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .switch-btn {
+            flex: 1;
+            padding: 8px;
+            border: 1px solid var(--border);
+            background: white;
+            cursor: pointer;
+            font-size: 13px;
+        }
+        
+        .switch-btn:first-child {
+            border-radius: 6px 0 0 6px;
+        }
+        
+        .switch-btn:last-child {
+            border-radius: 0 6px 6px 0;
+        }
+        
+        .switch-btn.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+        
+        /* 分割线 */
+        .divider {
+            height: 1px;
+            background: var(--border);
+            margin: 16px 0;
+        }
+        
+        /* 工具提示 */
+        .tooltip {
+            position: relative;
+        }
+        
+        .tooltip::after {
+            content: attr(data-tip);
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #333;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            white-space: nowrap;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s;
+        }
+        
+        .tooltip:hover::after {
+            opacity: 1;
+        }
+
+        /* 删除按钮 */
+        .delete-btn {
+            background: none;
+            border: none;
+            color: var(--danger);
+            cursor: pointer;
+            padding: 4px 8px;
+            font-size: 14px;
+        }
+
+        /* 展开/收起 */
+        .collapse-toggle {
+            background: none;
+            border: none;
+            color: var(--primary);
+            cursor: pointer;
+            font-size: 13px;
+            padding: 4px 0;
+        }
+
+        .collapse-content {
+            display: none;
+            margin-top: 12px;
+        }
+
+        .collapse-content.show {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <!-- 顶部 -->
+    <header class="header">
+        <h1>💰 2026上半年奖金计算器</h1>
+        <div class="subtitle">V1.0 · 实时计算 · 数据自动保存</div>
+    </header>
+    
+    <!-- 标签页 -->
+    <nav class="tabs">
+        <button class="tab active" data-tab="summary">📊 汇总</button>
+        <button class="tab" data-tab="persons">👥 人员</button>
+        <button class="tab" data-tab="params">⚙️ 参数</button>
+    </nav>
+    
+    <!-- 内容区 -->
+    <main class="content">
+        <!-- 汇总面板 -->
+        <div id="panel-summary" class="panel active">
+            <div class="summary-card">
+                <div class="summary-label">奖金总额</div>
+                <div class="summary-total" id="total-bonus">¥0</div>
+                <div class="summary-label">共 <span id="total-count">0</span> 人</div>
+                <div class="summary-grid">
+                    <div class="summary-item">
+                        <div class="summary-item-value" id="sum-incentive">¥0</div>
+                        <div class="summary-item-label">过程激励</div>
+                    </div>
+                    <div class="summary-item">
+                        <div class="summary-item-value" id="sum-completion">¥0</div>
+                        <div class="summary-item-label">完成奖</div>
+                    </div>
+                    <div class="summary-item">
+                        <div class="summary-item-value" id="sum-region">¥0</div>
+                        <div class="summary-item-label">区域/全国奖</div>
+                    </div>
+                    <div class="summary-item">
+                        <div class="summary-item-value" id="sum-other">¥0</div>
+                        <div class="summary-item-label">补贴+CEO奖</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-title">📈 按岗位汇总</div>
+                <div id="role-summary"></div>
+            </div>
+            
+            <div class="card">
+                <div class="card-title">📋 明细列表</div>
+                <div id="result-list"></div>
+            </div>
+        </div>
+        
+        <!-- 人员面板 -->
+        <div id="panel-persons" class="panel">
+            <div id="person-list"></div>
+            <div class="empty-state" id="empty-persons">
+                <div class="empty-state-icon">👤</div>
+                <p>暂无人员数据</p>
+                <p style="margin-top:8px;font-size:13px">点击下方按钮添加人员</p>
+            </div>
+        </div>
+        
+        <!-- 参数面板 -->
+        <div id="panel-params" class="panel">
+            <div class="card">
+                <div class="card-title">⏱️ 时间系数</div>
+                <div class="param-item">
+                    <span class="param-label">1月</span>
+                    <input type="number" class="param-input" id="coeff-1" value="1.15" step="0.05" min="0" max="2">
+                </div>
+                <div class="param-item">
+                    <span class="param-label">2月</span>
+                    <input type="number" class="param-input" id="coeff-2" value="1.15" step="0.05" min="0" max="2">
+                </div>
+                <div class="param-item">
+                    <span class="param-label">3月</span>
+                    <input type="number" class="param-input" id="coeff-3" value="1.10" step="0.05" min="0" max="2">
+                </div>
+                <div class="param-item">
+                    <span class="param-label">4月</span>
+                    <input type="number" class="param-input" id="coeff-4" value="1.00" step="0.05" min="0" max="2">
+                </div>
+                <div class="param-item">
+                    <span class="param-label">5月</span>
+                    <input type="number" class="param-input" id="coeff-5" value="0.90" step="0.05" min="0" max="2">
+                </div>
+                <div class="param-item">
+                    <span class="param-label">6月</span>
+                    <input type="number" class="param-input" id="coeff-6" value="0.85" step="0.05" min="0" max="2">
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-title">🎯 回款门槛</div>
+                <div class="param-item">
+                    <span class="param-label">90%奖回款门槛</span>
+                    <input type="number" class="param-input" id="threshold-90" value="0.85" step="0.01" min="0" max="1">
+                </div>
+                <div class="param-item">
+                    <span class="param-label">100%奖回款门槛</span>
+                    <input type="number" class="param-input" id="threshold-100" value="0.90" step="0.01" min="0" max="1">
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-title">🔄 完成奖叠加模式 <span class="tag tag-warning">待确认</span></div>
+                <div class="param-item">
+                    <span class="param-label">总经理DM</span>
+                    <div class="switch-group">
+                        <button class="switch-btn active" data-param="dm-mode" data-value="exclusive">仅最高档</button>
+                        <button class="switch-btn" data-param="dm-mode" data-value="stack">叠加</button>
+                    </div>
+                </div>
+                <div class="param-item">
+                    <span class="param-label">其他岗位</span>
+                    <div class="switch-group">
+                        <button class="switch-btn" data-param="other-mode" data-value="exclusive">仅最高档</button>
+                        <button class="switch-btn active" data-param="other-mode" data-value="stack">叠加</button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-title">💵 固定补贴</div>
+                <div class="param-item">
+                    <span class="param-label">常委半年补贴</span>
+                    <input type="number" class="param-input" id="cp-subsidy" value="60000" step="1000">
+                </div>
+                <div class="param-item">
+                    <span class="param-label">销售月补贴(新购/高校)</span>
+                    <input type="number" class="param-input" id="sales-subsidy" value="800" step="100">
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-title">📥 数据操作</div>
+                <button class="btn btn-outline btn-block" onclick="loadTestData()" style="margin-bottom:12px">
+                    📋 加载测试数据
+                </button>
+                <button class="btn btn-outline btn-block" onclick="exportData()" style="margin-bottom:12px">
+                    💾 导出数据(JSON)
+                </button>
+                <button class="btn btn-danger btn-block" onclick="clearAllData()">
+                    🗑️ 清空所有数据
+                </button>
+            </div>
+        </div>
+    </main>
+    
+    <!-- 底部操作栏 -->
+    <div class="bottom-bar">
+        <button class="btn btn-primary" style="flex:1" onclick="showAddModal()">
+            ➕ 添加人员
+        </button>
+    </div>
+    
+    <!-- 添加/编辑人员模态框 -->
+    <div class="modal" id="person-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title" id="modal-title">添加人员</div>
+                <button class="modal-close" onclick="closeModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="edit-id">
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">姓名 *</label>
+                        <input type="text" class="form-control" id="input-name" placeholder="请输入姓名">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">岗位 *</label>
+                        <select class="form-control" id="input-role">
+                            <option value="CP">常委 CP</option>
+                            <option value="DM">总经理 DM</option>
+                            <option value="VP">副总经理 VP</option>
+                            <option value="MGR">部门经理 MGR</option>
+                            <option value="SALES_USER">销售-用户部</option>
+                            <option value="SALES_NEW">销售-新购</option>
+                            <option value="SALES_EDU">销售-高校</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">区域</label>
+                        <select class="form-control" id="input-region">
+                            <option value="全国">全国</option>
+                            <option value="华北">华北</option>
+                            <option value="华东">华东</option>
+                            <option value="华南">华南</option>
+                            <option value="西南">西南</option>
+                            <option value="西北">西北</option>
+                            <option value="东北">东北</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">组织单元</label>
+                        <input type="text" class="form-control" id="input-org" placeholder="如：北京分公司">
+                    </div>
+                </div>
+                
+                <div class="divider"></div>
+                <h4 style="margin-bottom:12px;font-size:14px;color:var(--text-secondary)">📊 月度产值（元）</h4>
+                
+                <div class="form-row form-row-3">
+                    <div class="form-group">
+                        <label class="form-label">1月</label>
+                        <input type="number" class="form-control" id="input-rev-1" value="0">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">2月</label>
+                        <input type="number" class="form-control" id="input-rev-2" value="0">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">3月</label>
+                        <input type="number" class="form-control" id="input-rev-3" value="0">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">4月</label>
+                        <input type="number" class="form-control" id="input-rev-4" value="0">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">5月</label>
+                        <input type="number" class="form-control" id="input-rev-5" value="0">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">6月</label>
+                        <input type="number" class="form-control" id="input-rev-6" value="0">
+                    </div>
+                </div>
+                
+                <div class="divider"></div>
+                <h4 style="margin-bottom:12px;font-size:14px;color:var(--text-secondary)">🎯 目标与回款</h4>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">分公司总产值</label>
+                        <input type="number" class="form-control" id="input-company-rev" value="0">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">年度目标</label>
+                        <input type="number" class="form-control" id="input-target" value="0">
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">回款率 (0-1)</label>
+                        <input type="number" class="form-control" id="input-collection" value="0.90" step="0.01" min="0" max="1">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">个人分配比例 (0-1)</label>
+                        <input type="number" class="form-control" id="input-ratio" placeholder="不填则显示总额" step="0.01" min="0" max="1">
+                    </div>
+                </div>
+                
+                <div class="divider"></div>
+                <h4 style="margin-bottom:12px;font-size:14px;color:var(--text-secondary)">🏆 完成情况</h4>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">区域完成90%</label>
+                        <select class="form-control" id="input-region-90" style="width:100%">
+                            <option value="0">否</option>
+                            <option value="1">是</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">区域完成100%</label>
+                        <select class="form-control" id="input-region-100" style="width:100%">
+                            <option value="0">否</option>
+                            <option value="1">是</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">全国完成90%</label>
+                        <select class="form-control" id="input-national-90" style="width:100%">
+                            <option value="0">否</option>
+                            <option value="1">是</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">全国完成100%</label>
+                        <select class="form-control" id="input-national-100" style="width:100%">
+                            <option value="0">否</option>
+                            <option value="1">是</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">CEO奖金</label>
+                    <input type="number" class="form-control" id="input-ceo-bonus" value="0">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" style="flex:1" onclick="closeModal()">取消</button>
+                <button class="btn btn-primary" style="flex:1" onclick="savePerson()">保存</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ============ 数据存储 ============
+        let persons = [];
+        let params = {
+            coefficients: [1.15, 1.15, 1.10, 1.00, 0.90, 0.85],
+            threshold90: 0.85,
+            threshold100: 0.90,
+            dmMode: 'exclusive',
+            otherMode: 'stack',
+            cpSubsidy: 60000,
+            salesSubsidy: 800
+        };
+        
+        // 岗位配置
+        const ROLE_CONFIG = {
+            CP: { name: '常委', rate: 0, hasRegion: true, hasNational: true, hasSubsidy: true },
+            DM: { name: '总经理', rate: 0.004, hasRegion: true, hasNational: false, hasSubsidy: false },
+            VP: { name: '副总经理', rate: 0.004, hasRegion: false, hasNational: false, hasSubsidy: false },
+            MGR: { name: '部门经理', rate: 0.01, hasRegion: false, hasNational: false, hasSubsidy: false },
+            SALES_USER: { name: '销售-用户部', rate: 0.02, hasRegion: false, hasNational: false, hasSubsidy: false },
+            SALES_NEW: { name: '销售-新购', rate: 0.03, hasRegion: false, hasNational: false, hasSubsidy: true },
+            SALES_EDU: { name: '销售-高校', rate: 0.03, hasRegion: false, hasNational: false, hasSubsidy: true }
+        };
+        
+        // ============ 初始化 ============
+        document.addEventListener('DOMContentLoaded', () => {
+            loadFromStorage();
+            bindEvents();
+            calculate();
+        });
+        
+        function loadFromStorage() {
+            const savedPersons = localStorage.getItem('bonus_persons');
+            const savedParams = localStorage.getItem('bonus_params');
+            if (savedPersons) persons = JSON.parse(savedPersons);
+            if (savedParams) params = JSON.parse(savedParams);
+            syncParamsToUI();
+        }
+        
+        function saveToStorage() {
+            localStorage.setItem('bonus_persons', JSON.stringify(persons));
+            localStorage.setItem('bonus_params', JSON.stringify(params));
+        }
+        
+        function syncParamsToUI() {
+            for (let i = 1; i <= 6; i++) {
+                document.getElementById(`coeff-${i}`).value = params.coefficients[i-1];
+            }
+            document.getElementById('threshold-90').value = params.threshold90;
+            document.getElementById('threshold-100').value = params.threshold100;
+            document.getElementById('cp-subsidy').value = params.cpSubsidy;
+            document.getElementById('sales-subsidy').value = params.salesSubsidy;
+            
+            document.querySelectorAll('.switch-btn').forEach(btn => {
+                const param = btn.dataset.param;
+                const value = btn.dataset.value;
+                if (param === 'dm-mode') {
+                    btn.classList.toggle('active', value === params.dmMode);
+                } else if (param === 'other-mode') {
+                    btn.classList.toggle('active', value === params.otherMode);
+                }
+            });
+        }
+        
+        // ============ 事件绑定 ============
+        function bindEvents() {
+            // 标签页切换
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.addEventListener('click', () => {
+                    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+                    tab.classList.add('active');
+                    document.getElementById(`panel-${tab.dataset.tab}`).classList.add('active');
+                });
+            });
+            
+            // 参数输入变化
+            document.querySelectorAll('.param-input').forEach(input => {
+                input.addEventListener('change', () => {
+                    syncParamsFromUI();
+                    calculate();
+                });
+            });
+            
+            // 叠加模式切换
+            document.querySelectorAll('.switch-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const param = btn.dataset.param;
+                    const value = btn.dataset.value;
+                    btn.parentElement.querySelectorAll('.switch-btn').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    if (param === 'dm-mode') params.dmMode = value;
+                    if (param === 'other-mode') params.otherMode = value;
+                    saveToStorage();
+                    calculate();
+                });
+            });
+        }
+        
+        function syncParamsFromUI() {
+            for (let i = 1; i <= 6; i++) {
+                params.coefficients[i-1] = parseFloat(document.getElementById(`coeff-${i}`).value) || 0;
+            }
+            params.threshold90 = parseFloat(document.getElementById('threshold-90').value) || 0;
+            params.threshold100 = parseFloat(document.getElementById('threshold-100').value) || 0;
+            params.cpSubsidy = parseFloat(document.getElementById('cp-subsidy').value) || 0;
+            params.salesSubsidy = parseFloat(document.getElementById('sales-subsidy').value) || 0;
+            saveToStorage();
+        }
+        
+        // ============ 计算逻辑 ============
+        function calculate() {
+            const results = persons.map(p => calculatePerson(p));
+            renderResults(results);
+            renderPersonList();
+            saveToStorage();
+        }
+        
+        function calculatePerson(person) {
+            const role = person.role;
+            const config = ROLE_CONFIG[role];
+            const result = {
+                ...person,
+                roleName: config.name,
+                incentive: 0,
+                completionBonus90: 0,
+                completionBonus100: 0,
+                completionBonusTotal: 0,
+                regionBonus: 0,
+                nationalBonus: 0,
+                subsidy: 0,
+                ceoBonus: person.ceoBonus || 0,
+                total: 0,
+                completionRate: 0
+            };
+            
+            // 产值合计
+            const totalRev = (person.revenue || []).reduce((a, b) => a + (b || 0), 0);
+            result.totalRevenue = totalRev;
+            
+            // 分公司完成率
+            const companyRev = person.companyRevenue || totalRev;
+            const target = person.target || 0;
+            result.completionRate = target > 0 ? companyRev / target : 0;
+            
+            // 过程激励
+            if (config.rate > 0) {
+                result.incentive = (person.revenue || []).reduce((sum, rev, i) => {
+                    return sum + (rev || 0) * config.rate * params.coefficients[i];
+                }, 0);
+            }
+            
+            // 完成奖
+            if (role !== 'CP') {
+                const collectionRate = person.collectionRate || 0;
+                const ratio = person.ratio || 1;
+                
+                // 90%档
+                if (result.completionRate >= 0.9 && collectionRate >= params.threshold90) {
+                    if (role === 'DM') {
+                        result.completionBonus90 = Math.min(companyRev * 0.004, 40000);
+                    } else {
+                        result.completionBonus90 = companyRev * 0.015 * ratio;
+                    }
+                }
+                
+                // 100%档
+                if (result.completionRate >= 1.0 && collectionRate >= params.threshold100) {
+                    if (role === 'DM') {
+                        result.completionBonus100 = Math.min(companyRev * 0.004, 40000);
+                    } else {
+                        result.completionBonus100 = companyRev * 0.015 * ratio;
+                    }
+                }
+                
+                // 叠加模式
+                const mode = role === 'DM' ? params.dmMode : params.otherMode;
+                if (mode === 'exclusive') {
+                    result.completionBonusTotal = Math.max(result.completionBonus90, result.completionBonus100);
+                } else {
+                    result.completionBonusTotal = result.completionBonus90 + result.completionBonus100;
+                }
+            }
+            
+            // 区域奖
+            if (config.hasRegion) {
+                if (role === 'CP') {
+                    if (person.region90) result.regionBonus += 30000;
+                    if (person.region100) result.regionBonus += 30000;
+                } else if (role === 'DM') {
+                    if (person.region90 || person.region100) result.regionBonus = 40000;
+                }
+            }
+            
+            // 全国奖
+            if (config.hasNational && role === 'CP') {
+                if (person.national90) result.nationalBonus += 40000;
+                if (person.national100) result.nationalBonus += 40000;
+            }
+            
+            // 固定补贴
+            if (role === 'CP') {
+                result.subsidy = params.cpSubsidy;
+            } else if (role === 'SALES_NEW' || role === 'SALES_EDU') {
+                result.subsidy = params.salesSubsidy * 6;
+            }
+            
+            // 总计
+            result.total = result.incentive + result.completionBonusTotal + 
+                          result.regionBonus + result.nationalBonus + 
+                          result.subsidy + result.ceoBonus;
+            
+            return result;
+        }
+        
+        // ============ 渲染 ============
+        function formatMoney(num) {
+            return '¥' + Math.round(num || 0).toLocaleString();
+        }
+        
+        function renderResults(results) {
+            // 汇总数据
+            let sumIncentive = 0, sumCompletion = 0, sumRegion = 0, sumOther = 0, sumTotal = 0;
+            const roleSums = {};
+            
+            results.forEach(r => {
+                sumIncentive += r.incentive;
+                sumCompletion += r.completionBonusTotal;
+                sumRegion += r.regionBonus + r.nationalBonus;
+                sumOther += r.subsidy + r.ceoBonus;
+                sumTotal += r.total;
+                
+                if (!roleSums[r.role]) {
+                    roleSums[r.role] = { count: 0, total: 0, name: r.roleName };
+                }
+                roleSums[r.role].count++;
+                roleSums[r.role].total += r.total;
+            });
+            
+            document.getElementById('total-bonus').textContent = formatMoney(sumTotal);
+            document.getElementById('total-count').textContent = results.length;
+            document.getElementById('sum-incentive').textContent = formatMoney(sumIncentive);
+            document.getElementById('sum-completion').textContent = formatMoney(sumCompletion);
+            document.getElementById('sum-region').textContent = formatMoney(sumRegion);
+            document.getElementById('sum-other').textContent = formatMoney(sumOther);
+            
+            // 按岗位汇总
+            const roleSummaryHtml = Object.entries(roleSums).map(([role, data]) => `
+                <div class="bonus-item">
+                    <span class="bonus-item-label">${data.name} (${data.count}人)</span>
+                    <span class="bonus-item-value">${formatMoney(data.total)}</span>
+                </div>
+            `).join('');
+            document.getElementById('role-summary').innerHTML = roleSummaryHtml || '<div style="color:#999;font-size:13px">暂无数据</div>';
+            
+            // 明细列表
+            const resultListHtml = results.length ? results.map(r => `
+                <div class="person-item">
+                    <div class="person-header">
+                        <div>
+                            <span class="person-name">${r.name}</span>
+                            <span class="person-role">${r.roleName}</span>
+                        </div>
+                        <div class="person-bonus">${formatMoney(r.total)}</div>
+                    </div>
+                    <div class="bonus-detail">
+                        <div class="bonus-item">
+                            <span class="bonus-item-label">过程激励</span>
+                            <span class="bonus-item-value">${formatMoney(r.incentive)}</span>
+                        </div>
+                        <div class="bonus-item">
+                            <span class="bonus-item-label">完成奖</span>
+                            <span class="bonus-item-value">${formatMoney(r.completionBonusTotal)}</span>
+                        </div>
+                        <div class="bonus-item">
+                            <span class="bonus-item-label">区域奖</span>
+                            <span class="bonus-item-value">${formatMoney(r.regionBonus)}</span>
+                        </div>
+                        <div class="bonus-item">
+                            <span class="bonus-item-label">全国奖</span>
+                            <span class="bonus-item-value">${formatMoney(r.nationalBonus)}</span>
+                        </div>
+                        <div class="bonus-item">
+                            <span class="bonus-item-label">固定补贴</span>
+                            <span class="bonus-item-value">${formatMoney(r.subsidy)}</span>
+                        </div>
+                        <div class="bonus-item">
+                            <span class="bonus-item-label">CEO奖金</span>
+                            <span class="bonus-item-value">${formatMoney(r.ceoBonus)}</span>
+                        </div>
+                        <div class="bonus-item">
+                            <span class="bonus-item-label">完成率</span>
+                            <span class="bonus-item-value">${(r.completionRate * 100).toFixed(1)}%</span>
+                        </div>
+                        <div class="bonus-item">
+                            <span class="bonus-item-label">回款率</span>
+                            <span class="bonus-item-value">${((r.collectionRate || 0) * 100).toFixed(1)}%</span>
+                        </div>
+                    </div>
+                </div>
+            `).join('') : '<div class="empty-state"><div class="empty-state-icon">📊</div><p>暂无数据，请先添加人员</p></div>';
+            document.getElementById('result-list').innerHTML = resultListHtml;
+        }
+        
+        function renderPersonList() {
+            const emptyEl = document.getElementById('empty-persons');
+            const listEl = document.getElementById('person-list');
+            
+            if (persons.length === 0) {
+                emptyEl.style.display = 'block';
+                listEl.innerHTML = '';
+                return;
+            }
+            
+            emptyEl.style.display = 'none';
+            listEl.innerHTML = persons.map((p, i) => `
+                <div class="card">
+                    <div style="display:flex;justify-content:space-between;align-items:center">
+                        <div>
+                            <strong>${p.name}</strong>
+                            <span class="person-role" style="margin-left:8px">${ROLE_CONFIG[p.role].name}</span>
+                        </div>
+                        <div>
+                            <button class="btn btn-sm btn-outline" onclick="editPerson(${i})">编辑</button>
+                            <button class="delete-btn" onclick="deletePerson(${i})">🗑️</button>
+                        </div>
+                    </div>
+                    <div style="margin-top:12px;font-size:13px;color:var(--text-secondary)">
+                        ${p.region} · ${p.org || '-'} · 产值合计: ${formatMoney((p.revenue||[]).reduce((a,b)=>a+(b||0),0))}
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        // ============ 模态框操作 ============
+        function showAddModal() {
+            document.getElementById('modal-title').textContent = '添加人员';
+            document.getElementById('edit-id').value = '';
+            clearForm();
+            document.getElementById('person-modal').classList.add('active');
+        }
+        
+        function editPerson(index) {
+            const p = persons[index];
+            document.getElementById('modal-title').textContent = '编辑人员';
+            document.getElementById('edit-id').value = index;
+            
+            document.getElementById('input-name').value = p.name || '';
+            document.getElementById('input-role').value = p.role || 'DM';
+            document.getElementById('input-region').value = p.region || '华北';
+            document.getElementById('input-org').value = p.org || '';
+            
+            for (let i = 1; i <= 6; i++) {
+                document.getElementById(`input-rev-${i}`).value = (p.revenue && p.revenue[i-1]) || 0;
+            }
+            
+            document.getElementById('input-company-rev').value = p.companyRevenue || 0;
+            document.getElementById('input-target').value = p.target || 0;
+            document.getElementById('input-collection').value = p.collectionRate || 0.9;
+            document.getElementById('input-ratio').value = p.ratio || '';
+            document.getElementById('input-region-90').value = p.region90 ? '1' : '0';
+            document.getElementById('input-region-100').value = p.region100 ? '1' : '0';
+            document.getElementById('input-national-90').value = p.national90 ? '1' : '0';
+            document.getElementById('input-national-100').value = p.national100 ? '1' : '0';
+            document.getElementById('input-ceo-bonus').value = p.ceoBonus || 0;
+            
+            document.getElementById('person-modal').classList.add('active');
+        }
+        
+        function closeModal() {
+            document.getElementById('person-modal').classList.remove('active');
+        }
+        
+        function clearForm() {
+            document.getElementById('input-name').value = '';
+            document.getElementById('input-role').value = 'DM';
+            document.getElementById('input-region').value = '华北';
+            document.getElementById('input-org').value = '';
+            for (let i = 1; i <= 6; i++) {
+                document.getElementById(`input-rev-${i}`).value = 0;
+            }
+            document.getElementById('input-company-rev').value = 0;
+            document.getElementById('input-target').value = 0;
+            document.getElementById('input-collection').value = 0.9;
+            document.getElementById('input-ratio').value = '';
+            document.getElementById('input-region-90').value = '0';
+            document.getElementById('input-region-100').value = '0';
+            document.getElementById('input-national-90').value = '0';
+            document.getElementById('input-national-100').value = '0';
+            document.getElementById('input-ceo-bonus').value = 0;
+        }
+        
+        function savePerson() {
+            const name = document.getElementById('input-name').value.trim();
+            if (!name) {
+                alert('请输入姓名');
+                return;
+            }
+            
+            const person = {
+                name: name,
+                role: document.getElementById('input-role').value,
+                region: document.getElementById('input-region').value,
+                org: document.getElementById('input-org').value,
+                revenue: [],
+                companyRevenue: parseFloat(document.getElementById('input-company-rev').value) || 0,
+                target: parseFloat(document.getElementById('input-target').value) || 0,
+                collectionRate: parseFloat(document.getElementById('input-collection').value) || 0,
+                ratio: parseFloat(document.getElementById('input-ratio').value) || null,
+                region90: document.getElementById('input-region-90').value === '1',
+                region100: document.getElementById('input-region-100').value === '1',
+                national90: document.getElementById('input-national-90').value === '1',
+                national100: document.getElementById('input-national-100').value === '1',
+                ceoBonus: parseFloat(document.getElementById('input-ceo-bonus').value) || 0
+            };
+            
+            for (let i = 1; i <= 6; i++) {
+                person.revenue.push(parseFloat(document.getElementById(`input-rev-${i}`).value) || 0);
+            }
+            
+            const editId = document.getElementById('edit-id').value;
+            if (editId !== '') {
+                persons[parseInt(editId)] = person;
+            } else {
+                persons.push(person);
+            }
+            
+            closeModal();
+            calculate();
+        }
+        
+        function deletePerson(index) {
+            if (confirm('确定删除该人员吗？')) {
+                persons.splice(index, 1);
+                calculate();
+            }
+        }
+        
+        // ============ 数据操作 ============
+        function loadTestData() {
+            if (persons.length > 0 && !confirm('将覆盖现有数据，确定加载测试数据？')) return;
+            
+            persons = [
+                { name: '王总', role: 'CP', region: '全国', org: '总部', revenue: [0,0,0,0,0,0], companyRevenue: 0, target: 0, collectionRate: 0.95, ratio: null, region90: true, region100: true, national90: true, national100: false, ceoBonus: 50000 },
+                { name: '李总', role: 'DM', region: '华北', org: '北京分公司', revenue: [500000,600000,700000,800000,750000,650000], companyRevenue: 4000000, target: 3800000, collectionRate: 0.92, ratio: null, region90: true, region100: false, national90: false, national100: false, ceoBonus: 20000 },
+                { name: '张经理', role: 'MGR', region: '华东', org: '上海分公司', revenue: [150000,180000,200000,220000,190000,160000], companyRevenue: 3000000, target: 2800000, collectionRate: 0.91, ratio: 0.25, region90: false, region100: false, national90: false, national100: false, ceoBonus: 5000 },
+                { name: '陈销售', role: 'SALES_NEW', region: '华东', org: '上海分公司', revenue: [80000,90000,100000,110000,95000,85000], companyRevenue: 3000000, target: 500000, collectionRate: 0.88, ratio: 0.15, region90: false, region100: false, national90: false, national100: false, ceoBonus: 0 },
+                { name: '刘副总', role: 'VP', region: '华南', org: '深圳分公司', revenue: [200000,250000,280000,300000,270000,230000], companyRevenue: 2500000, target: 2300000, collectionRate: 0.93, ratio: 0.4, region90: false, region100: false, national90: false, national100: false, ceoBonus: 10000 },
+                { name: '赵销售', role: 'SALES_EDU', region: '西南', org: '成都分公司', revenue: [60000,70000,85000,90000,80000,65000], companyRevenue: 1800000, target: 400000, collectionRate: 0.90, ratio: 0.2, region90: false, region100: false, national90: false, national100: false, ceoBonus: 0 }
+            ];
+            calculate();
+            alert('测试数据已加载！');
+            // 切换到汇总页
+            document.querySelector('.tab[data-tab="summary"]').click();
+        }
+        
+        function exportData() {
+            const data = { params, persons };
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `bonus_data_${new Date().toISOString().slice(0,10)}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+        
+        function clearAllData() {
+            if (confirm('确定清空所有数据吗？此操作不可恢复！')) {
+                persons = [];
+                localStorage.removeItem('bonus_persons');
+                calculate();
+            }
+        }
+    </script>
+</body>
+</html>
